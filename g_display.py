@@ -11,22 +11,53 @@ from scipy.integrate import quad
 
 import graph
 
-def display_graph(madj,mblocs):
-  A = [list(mblocs[i]).index(1)+1 for i in range(len(mblocs))]
-  A = np.array(A).T
-
-  G = nx.from_numpy_array(madj)
+def display_graph(X, Z_vrai):
+  
+  #on crée une liste parti où parti[i] correspond au numéro de parti du noeud i
+  parti = [list(Z_vrai[i]).index(1)+1 for i in range(len(Z_vrai))]
+  parti = np.array(parti).T
+  
+  #on crée le graphe 
+  G = nx.from_numpy_array(X)
   pos = nx.spring_layout(G, k=0.2)
   x_nodes = [pos[node][0] for node in G.nodes()]
   y_nodes = [pos[node][1] for node in G.nodes()]
   node_labels = [str(node) for node in G.nodes()]
-
-  # 4. Catégoriser les nœuds par bloc selon la matrice Z
-  block_colors = {1: 'green', 2: 'blue', 3: 'lightblue', 4: 'red', 5: 'pink', 6: 'orange', 7: 'white', 8: 'yellow', 9: 'grey', 10: 'cyan'}  # Choisir les couleurs pour chaque bloc
-  node_colors = [block_colors[A[i]] for i in range(len(A))]  # Assigner les couleurs aux nœuds
-  block_colors = {i:block_colors[i] for i in block_colors if i<=len(mblocs)}
-
-  # 5. Visualiser le graphe avec NetworkX et Matplotlib
+      
+  
+  # On associe une couleur à chaque noeud en focntion de son parti
+  block_colors = {1: 'green', 2: 'darkblue', 3: 'lightblue', 4: 'red', 5: 'pink', 6: 'darkred', 7: 'black', 8: 'yellow', 9: 'grey', 10: 'cyan'}  # Choisir les couleurs pour chaque bloc
+  # Assigner les couleurs aux nœuds
+  node_colors = [block_colors[parti[i]] for i in range(len(parti))]  
+  block_colors = {i:block_colors[i] for i in block_colors if i<=len(Z_vrai)}
+  
+       
+  legend_labels = [
+          ("Les Verts", 'green'),
+          ("UMP", 'darkblue'),
+          ("UDF", 'lightblue'),
+          ("PS", 'red'),
+          ("Parti Radical de Gauche", 'pink'),
+          ("PCF - LCR", 'darkred'),
+          ("FN - MNR - MPF", 'black'),
+          ("Libéraux", 'yellow'),
+          ("Commentateurs Analystes", 'grey'),
+          ("Cap21", 'cyan')
+      ]
+          
+  legend = [
+              go.layout.Annotation(
+                  x=0.95, y=1 - (i * 0.05),  # Positionnement vertical
+                  xref="paper", yref="paper",  # Coordonnées relatives au graphe
+                  text=f'{label}',
+                  showarrow=False,
+                  font=dict(size=12, color=color),
+                  align="left"
+              )
+          for i, (label, color) in enumerate(legend_labels)
+      ]
+        
+  # Visualiser le graphe avec NetworkX et Matplotlib
   edges_x = []
   edges_y = []
   for edge in G.edges():
@@ -36,8 +67,9 @@ def display_graph(madj,mblocs):
       edges_x.append(x1)
       edges_y.append(y0)
       edges_y.append(y1)
-
-  # Créer un objet plotly pour les nœuds
+  
+  
+    # Créer un objet plotly pour les nœuds
   node_trace = go.Scatter(
       x=x_nodes,
       y=y_nodes,
@@ -45,13 +77,13 @@ def display_graph(madj,mblocs):
       hoverinfo='text',
       marker=dict(
           showscale=True,
-          colorscale='YlGnBu',  # Choisir une palette de couleurs
+          colorscale='YlGnBu',  
           size=10,
           color=node_colors,  # Affecter les couleurs aux nœuds
           line_width=2
       )
   )
-
+  
   # Créer un objet plotly pour les arêtes
   edge_trace = go.Scatter(
       x=edges_x,
@@ -60,24 +92,28 @@ def display_graph(madj,mblocs):
       hoverinfo='none',
       mode='lines'
   )
-
-
-
+  
+  
+  
   # Créer le graphique
   fig = go.Figure(data=[edge_trace, node_trace],
                   layout=go.Layout(
                       showlegend=False,
                       hovermode='closest',
-                      title="Graphe Interactif avec Légende",
+                      title="Graphe de la blogosphère française ",
                       xaxis=dict(showgrid=False, zeroline=False),
                       yaxis=dict(showgrid=False, zeroline=False),
                       plot_bgcolor='white',
                       margin=dict(l=0, r=0, b=0, t=0),
-
+                      annotations = legend
+      
                   ))
-
-  # Afficher le graphe
+  
+          
+  
+  #Afficher le graphe
   fig.show()
+  
 
 
 def display_graphon(mu,pi):
